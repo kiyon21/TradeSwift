@@ -11,8 +11,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,18 +26,6 @@ public class UserController {
     private final UserAuthService userAuthService;
     private final UserQueryService userQueryService;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> registerUser(
-            @Valid @RequestBody RegisterRequest request) {
-        UserResponse userResponse = userAuthService.registerUser(request);
-
-        ApiResponse<UserResponse> response = ApiResponse.success(
-                "User Registered Successfully", userResponse
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String userId) {
         UUID uuid = UUID.fromString(userId);
@@ -44,6 +35,24 @@ public class UserController {
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        // Extract phone from authenticated user
+        String phone = userDetails.getUsername();
+
+        // Get user by phone
+        UserResponse user = userQueryService.getUserByPhone(phone);
+
+        ApiResponse<UserResponse> response = ApiResponse.success(
+                "Current user retrieved successfully",
+                user
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -66,6 +75,18 @@ public class UserController {
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserResponse>> registerUser(
+            @Valid @RequestBody RegisterRequest request) {
+        UserResponse userResponse = userAuthService.registerUser(request);
+
+        ApiResponse<UserResponse> response = ApiResponse.success(
+                "User Registered Successfully", userResponse
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 }
