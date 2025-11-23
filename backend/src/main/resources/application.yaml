@@ -25,6 +25,11 @@ app:
     access-expiration-ms: 86400000  # 24 hours in milliseconds
     refresh-expiration-ms: 604800000  # 7 days in milliseconds
 
+google:
+  places:
+    api-key: ${GOOGLE_PLACES_API_KEY:your-api-key}
+    base-url: https://maps.googleapis.com/maps/api/place
+
 # Swagger/OpenAPI Configuration
 springdoc:
   api-docs:

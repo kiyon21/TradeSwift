@@ -68,6 +68,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<Map<String, Object>> handleExternalServiceException(
+            ExternalServiceException ex,
+            WebRequest request
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", "External service error: " + ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        response.put("path", request.getDescription(false).replace("uri=", ""));
+
+        return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     // Handle BadRequestException
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequestException(

@@ -89,12 +89,12 @@ public class UserAuthService {
         String refreshTokenString = jwtTokenProvider.generateRefreshToken(user);
 
         // Delete old refresh tokens for this user
-        refreshTokenRepository.deleteByUserId(user.getUserId());
+        refreshTokenRepository.deleteByUser(user);
 
         // Save new refresh token
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(refreshTokenString)
-                .userId(user.getUserId())
+                .user(user)
                 .expiresAt(LocalDateTime.now().plus(Duration.ofMillis(jwtConfig.getRefreshExpirationMs())))
                 .build();
         refreshTokenRepository.save(refreshToken);
@@ -111,10 +111,11 @@ public class UserAuthService {
         try {
             // Extract user ID from access token
             UUID userId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
+            User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId.toString()));
 
             // Revoke all refresh tokens for this user
-            if (refreshTokenRepository.existsByUserId(userId)) {
-                refreshTokenRepository.deleteByUserId(userId);
+            if (refreshTokenRepository.existsByUser(user)) {
+                refreshTokenRepository.deleteByUser(user);
                 log.info("User {} logged out successfully", userId);
             }
         } catch (Exception e) {
@@ -152,7 +153,7 @@ public class UserAuthService {
         // 6. Save new refresh token
         RefreshToken newRefreshToken = RefreshToken.builder()
                 .token(newRefreshTokenString)
-                .userId(userId)
+                .user(user)
                 .expiresAt(LocalDateTime.now().plus(Duration.ofMillis(jwtConfig.getRefreshExpirationMs())))
                 .build();
         refreshTokenRepository.save(newRefreshToken);
